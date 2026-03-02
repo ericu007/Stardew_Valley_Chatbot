@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stardew Friendship Bot</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sdv-brown: #683f20;
+            --sdv-tan: #fce1b6;
+            --sdv-gold: #f4d03f;
+            --sdv-border: #4a2d18;
+        }
+
+        body { 
+            /* Point to the /static/ route you just created */
+            background-image: url('/static/wallpaper2_2.png'); 
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            
+            /* Keep your existing pixelated rendering for crisp game art */
+            image-rendering: pixelated;
+
+            font-family: 'Press Start 2P', cursive; 
+            font-size: 12px;
+            color: var(--sdv-brown);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 40px;
+        }
+
+        h2 { color: var(--sdv-gold); text-shadow: 2px 2px var(--sdv-border); margin-bottom: 20px; }
+
+        /* The Main Game-like Window */
+        #chat-container {
+            background-color: var(--sdv-tan);
+            border: 6px solid var(--sdv-brown);
+            box-shadow: inset -4px -4px 0px #d18d36, inset 4px 4px 0px #fff9e6;
+            width: 600px;
+            padding: 20px;
+            border-radius: 4px;
+        }
+
+        #chat { 
+            height: 400px; 
+            overflow-y: auto; 
+            margin-bottom: 20px;
+            padding-right: 10px;
+        }
+
+        /* Message Styles */
+        .msg-line { margin-bottom: 15px; line-height: 1.6; }
+        .user { color: #004d99; } /* Blue for player */
+        .bot { color: #800080; }  /* Purple for the Guide */
+
+        /* Wood-styled Input & Button */
+        .input-area { display: flex; gap: 10px; }
+        
+        input[type="text"] { 
+            flex-grow: 1;
+            padding: 10px; 
+            background: #fff;
+            border: 4px solid var(--sdv-brown);
+            font-family: inherit;
+        }
+
+        button { 
+            background: var(--sdv-brown); 
+            color: white; 
+            border: 4px solid var(--sdv-border);
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        button:hover { background: #8b5a2b; }
+        
+        /* Custom scrollbar for that retro look */
+        #chat::-webkit-scrollbar { width: 10px; }
+        #chat::-webkit-scrollbar-track { background: var(--sdv-tan); }
+        #chat::-webkit-scrollbar-thumb { background: var(--sdv-brown); }
+    </style>
+</head>
+<body>
+    <h2>Stardew Friendship Guide</h2>
+    
+    <div id="chat-container">
+        <div id="chat"></div>
+        <div class="input-area">
+            <input type="text" id="msg" placeholder="Ask about gifts..." onkeypress="if(event.key === 'Enter') send()">
+            <button onclick="send()">Send</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" loop>
+        <source src="/static/ambient_forest.mp3" type="audio/mpeg">
+    </audio>
+
+    <div style="position: fixed; bottom: 20px; right: 20px;">
+        <button onclick="toggleMusic()" id="music-btn" style="font-size: 10px;">Play Music ♫</button>
+    </div>
+
+    <script>
+        async function send() {
+            const input = document.getElementById('msg');
+            const chat = document.getElementById('chat');
+            const text = input.value;
+            if(!text) return;
+            
+            chat.innerHTML += `<div class="msg-line user"><b>You:</b> ${text}</div>`;
+            input.value = '';
+            
+            const res = await fetch('/chat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({message: text})
+            });
+            const data = await res.json();
+            chat.innerHTML += `<div class="msg-line bot"><b>Guide:</b> ${marked.parse(data.response)}</div>`;
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        const music = document.getElementById('bg-music');
+        const btn = document.getElementById('music-btn');
+
+        function toggleMusic() {
+            if (music.paused) {
+                music.play();
+                btn.innerText = "Pause Music ||";
+            } else {
+                music.pause();
+                btn.innerText = "Play Music ♫";
+            }
+        }
+
+    </script>
+</body>
+</html>
